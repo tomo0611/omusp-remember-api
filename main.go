@@ -24,16 +24,19 @@ type Member struct {
 func getMembers(c echo.Context) error {
 	res, err := http.Get("https://omusp.jp/members")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return c.JSON(http.StatusInternalServerError, struct{ Error string }{Error: "Failed to get members, cannot connect to omusp.jp"})
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+		log.Printf("status code error: %d %s", res.StatusCode, res.Status)
+		return c.JSON(http.StatusInternalServerError, struct{ Error string }{Error: "Failed to get members, omusp.jp returned non-200 status code"})
 	}
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return c.JSON(http.StatusInternalServerError, struct{ Error string }{Error: "Failed to get members, cannot parse HTML from omusp.jp"})
 	}
 
 	members := []Member{}
